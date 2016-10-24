@@ -21,10 +21,14 @@ import android.os.Message;
 import android.speech.tts.TextToSpeech;
 import android.speech.tts.UtteranceProgressListener;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.TextView;
+import com.google.android.glass.view.WindowUtils;
+
 
 import edu.cmu.cs.gabriel.aedassistant.AEDAssistantConst;
 import edu.cmu.cs.gabriel.aedassistant.MainController;
@@ -69,6 +73,8 @@ public class GabrielClientActivity extends Activity implements TextToSpeech.OnIn
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED +
                 WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON +
                 WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        getWindow().requestFeature(WindowUtils.FEATURE_VOICE_COMMANDS);
+
     }
 
     @Override
@@ -95,6 +101,26 @@ public class GabrielClientActivity extends Activity implements TextToSpeech.OnIn
     protected void onDestroy() {
         Log.v(LOG_TAG, "++onDestroy");
         super.onDestroy();
+    }
+
+    @Override
+    public boolean onCreatePanelMenu (int featureId, Menu menu){
+        if(featureId == WindowUtils.FEATURE_VOICE_COMMANDS){
+            menu.add("Yes");
+            menu.add("No");
+            return true;
+        }
+        return super.onCreatePanelMenu(featureId, menu);
+    }
+
+    @Override
+    public boolean onMenuItemSelected(int featureId, MenuItem item) {
+        if(featureId == WindowUtils.FEATURE_VOICE_COMMANDS){
+            if(tts != null)
+                tts.speak(item.getTitle().toString(), TextToSpeech.QUEUE_ADD, null);
+            return true;
+        }
+        return super.onMenuItemSelected(featureId, item);
     }
 
     /**
