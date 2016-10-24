@@ -68,12 +68,12 @@ public class GabrielClientActivity extends Activity implements TextToSpeech.OnIn
     protected void onCreate(Bundle savedInstanceState) {
         Log.v(LOG_TAG, "++onCreate");
         super.onCreate(savedInstanceState);
+        getWindow().requestFeature(WindowUtils.FEATURE_VOICE_COMMANDS);
         setContentView(R.layout.activity_main);
         context = this;
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED +
                 WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON +
                 WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-        getWindow().requestFeature(WindowUtils.FEATURE_VOICE_COMMANDS);
 
     }
 
@@ -93,6 +93,8 @@ public class GabrielClientActivity extends Activity implements TextToSpeech.OnIn
     @Override
     protected void onPause() {
         Log.v(LOG_TAG, "++onPause");
+        if(tts != null)
+            tts.stop();
         this.terminate();
         super.onPause();
     }
@@ -100,6 +102,8 @@ public class GabrielClientActivity extends Activity implements TextToSpeech.OnIn
     @Override
     protected void onDestroy() {
         Log.v(LOG_TAG, "++onDestroy");
+        if(tts != null)
+            tts.stop();
         super.onDestroy();
     }
 
@@ -118,6 +122,12 @@ public class GabrielClientActivity extends Activity implements TextToSpeech.OnIn
         if(featureId == WindowUtils.FEATURE_VOICE_COMMANDS){
             if(tts != null)
                 tts.speak(item.getTitle().toString(), TextToSpeech.QUEUE_ADD, null);
+            if(item.getTitle().toString().contentEquals("Yes")){
+                YesButtonOnClick(null);
+            }
+            else if(item.getTitle().toString().contentEquals("No")){
+                NoButtonOnClick(null);
+            }
             return true;
         }
         return super.onMenuItemSelected(featureId, item);

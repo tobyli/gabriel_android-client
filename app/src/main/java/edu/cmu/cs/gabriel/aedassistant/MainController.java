@@ -41,12 +41,12 @@ public class MainController {
                     case StateMessage.NEXT_STATE:
                         moveToNextState();
                         tts.stop();
-                        tts.speak(currentState.getPrompt(), TextToSpeech.QUEUE_ADD, null);
+                        tts.speak(currentState.getPrompt(), TextToSpeech.QUEUE_FLUSH, null);
                         break;
                     case StateMessage.ERROR_STATE:
                         moveToErrorState();
                         tts.stop();
-                        tts.speak(currentState.getPrompt(), TextToSpeech.QUEUE_ADD, null);
+                        tts.speak(currentState.getPrompt(), TextToSpeech.QUEUE_FLUSH, null);
                         break;
                     case StateMessage.HOLD:
                     default:
@@ -79,13 +79,13 @@ public class MainController {
             throw new Exception("null current state");
         if(tts == null)
             throw new Exception("null tts");
-        tts.speak(currentState.getPrompt(), TextToSpeech.QUEUE_ADD, null);
+        tts.speak(currentState.getPrompt(), TextToSpeech.QUEUE_FLUSH, null);
     }
 
     public void init(){
         //create the states
         State initialState = new State("Initial state for the script", "initialState", "Initial State", State.INITIAL_STATE);
-        State showPadState = new State("Show the pad to the glass, is the pad shown red?", "showPadState", "Please pick the adult pad and hold the pad in front of you", State.NORMAL_STATE);
+        State showPadState = new State("Show the pad to the glass, is the pad shown red?", "showPadState", "Please pick the adult pad and hold the pad in front of you. Is the pad shown red?", State.NORMAL_STATE);
         State showPadErrorState = new State("Wrong pad shown to the glass", "showPadErrorState", "Wrong pad selected! Please pick the adult pad, which is the pad with read label. Is the pad shown red?", State.NORMAL_STATE);
         State putPadOnLeftChestState = new State("Put the pad on the face.", "putPadOnLeftChestState", "Please put the pad on the face of the dummy. Is the pad on the face now?", State.NORMAL_STATE);
         State putPadOnLeftChestErrorState = new State("Wrong location for the pad.", "putPadOnLeftChestErrorState", "Wrong location for the pad! Please put the pad on the face of the dummy. Is the pad on the face now?", State.NORMAL_STATE);
