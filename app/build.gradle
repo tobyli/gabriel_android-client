@@ -1,4 +1,15 @@
+buildscript {
+    repositories {
+        jcenter()
+    }
+
+    dependencies {
+        classpath 'com.android.tools.build:gradle:2.2.2'
+    }
+}
+
 apply plugin: 'com.android.application'
+
 android {
     compileSdkVersion 'Google Inc.:Glass Development Kit Preview:19'
     buildToolsVersion "24.0.1"
