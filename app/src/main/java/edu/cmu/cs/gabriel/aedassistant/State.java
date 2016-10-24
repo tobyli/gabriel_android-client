@@ -9,7 +9,7 @@ import java.lang.reflect.Method;
  */
 public class State {
     public int stateType;
-    final public static int INITIAL_STATE = 1, NORMAL_STATE = 2, ENDING_STATE = 3;
+    public static final int INITIAL_STATE = 1, NORMAL_STATE = 2, ENDING_STATE = 3;
     private String description;
     private String identifier;
     private State nextState;

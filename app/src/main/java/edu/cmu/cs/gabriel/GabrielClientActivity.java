@@ -7,6 +7,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import android.app.Activity;
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.hardware.Camera;
 import android.hardware.Camera.PreviewCallback;
@@ -20,8 +21,15 @@ import android.os.Message;
 import android.speech.tts.TextToSpeech;
 import android.speech.tts.UtteranceProgressListener;
 import android.util.Log;
+import android.view.View;
 import android.view.WindowManager;
 import android.widget.ImageView;
+import android.widget.TextView;
+
+import edu.cmu.cs.gabriel.aedassistant.AEDAssistantConst;
+import edu.cmu.cs.gabriel.aedassistant.MainController;
+import edu.cmu.cs.gabriel.aedassistant.State;
+import edu.cmu.cs.gabriel.aedassistant.StateMessage;
 import edu.cmu.cs.gabriel.network.AccStreamingThread;
 import edu.cmu.cs.gabriel.network.NetworkProtocol;
 import edu.cmu.cs.gabriel.network.ResultReceivingThread;
@@ -49,13 +57,17 @@ public class GabrielClientActivity extends Activity implements TextToSpeech.OnIn
 
     private ReceivedPacketInfo receivedPacketInfo = null;
 
+    private MainController mainController;
+    private Context context;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         Log.v(LOG_TAG, "++onCreate");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        getWindow().addFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED+
-                WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON+
+        context = this;
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED +
+                WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON +
                 WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
     }
 
@@ -101,15 +113,81 @@ public class GabrielClientActivity extends Activity implements TextToSpeech.OnIn
         if (tts == null) {
             tts = new TextToSpeech(this, this);
         }
-        
+
         // IMU sensors
         if (sensorManager == null) {
             sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
             sensorAcc = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
             sensorManager.registerListener(this, sensorAcc, SensorManager.SENSOR_DELAY_NORMAL);
         }
-        
+        initAEDAssistant();
         isRunning = true;
+    }
+
+    private void initAEDAssistant(){
+        // initiate the main controller
+        if(mainController == null)
+            mainController = new MainController(this);
+        // initiate the main controller
+        if(mainController != null && mainController.active == false) {
+            mainController.init();
+            screenLog("Initiatial State");
+
+            //add a new thread to read out the prompt every Ns
+            final Handler promptReadingHandler = new Handler();
+            promptReadingHandler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        if (mainController != null && mainController.getCurrentState() != null && mainController.getCurrentState().stateType != State.ENDING_STATE)
+                            mainController.readOutCurrentPrompt();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                    promptReadingHandler.postDelayed(this, AEDAssistantConst.VOICE_PROMPT_DELAY);
+                }
+            }, AEDAssistantConst.VOICE_PROMPT_DELAY);
+        }
+        /*
+        //add a new thread that fakes the StateMessage
+        final Handler fakeStateMessageHandler = new Handler();
+        fakeStateMessageHandler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                if(mainController != null && mainController.getCurrentState() != null && mainController.getCurrentState().stateType != State.ENDING_STATE) {
+                    StateMessage stateMessage = new StateMessage(mainController.getCurrentState().getIdentifier(), StateMessage.NEXT_STATE);
+                    mainController.handleStateMessage(stateMessage);
+                    screenLog("SENT A FAKE \"NEXT\" MESSAGE");
+                    fakeStateMessageHandler.postDelayed(this, AEDAssistantConst.FAKE_MESSAGE_DELAY);
+                }
+                else if(mainController != null && mainController.getCurrentState() != null && mainController.getCurrentState().stateType == State.ENDING_STATE) {
+                    screenLog("REACH THE ENDING STATE");
+                }
+            }
+        }, AEDAssistantConst.FAKE_MESSAGE_DELAY);
+        */
+    }
+
+    public void YesButtonOnClick(View view){
+        if(mainController != null && mainController.getCurrentState() != null && mainController.getCurrentState().stateType != State.ENDING_STATE) {
+            StateMessage stateMessage = new StateMessage(mainController.getCurrentState().getIdentifier(), StateMessage.NEXT_STATE);
+            mainController.handleStateMessage(stateMessage);
+            screenLog("SENT A \"NEXT\" MESSAGE");
+        }
+        else if(mainController != null && mainController.getCurrentState() != null && mainController.getCurrentState().stateType == State.ENDING_STATE) {
+            screenLog("REACH THE ENDING STATE");
+        }
+    }
+
+    public void NoButtonOnClick(View view){
+        if(mainController != null && mainController.getCurrentState() != null && mainController.getCurrentState().stateType != State.ENDING_STATE) {
+            StateMessage stateMessage = new StateMessage(mainController.getCurrentState().getIdentifier(), StateMessage.ERROR_STATE);
+            mainController.handleStateMessage(stateMessage);
+            screenLog("SENT A \"ERROR\" MESSAGE");
+        }
+        else if(mainController != null && mainController.getCurrentState() != null && mainController.getCurrentState().stateType == State.ENDING_STATE) {
+            screenLog("REACH THE ENDING STATE");
+        }
     }
     
     /**
@@ -150,6 +228,11 @@ public class GabrielClientActivity extends Activity implements TextToSpeech.OnIn
 
         videoStreamingThread = new VideoStreamingThread(serverIP, Const.VIDEO_STREAM_PORT, returnMsgHandler, tokenController);
         videoStreamingThread.start();
+
+
+
+
+
     }
 
     /**
@@ -243,42 +326,48 @@ public class GabrielClientActivity extends Activity implements TextToSpeech.OnIn
                 receivedPacketInfo = (ReceivedPacketInfo) msg.obj;
                 receivedPacketInfo.setMsgRecvTime(System.currentTimeMillis());
             }
-            /*
+
             if (msg.what == NetworkProtocol.NETWORK_RET_SPEECH) {
                 String ttsMessage = (String) msg.obj;
                 //this is the part used to speat out the instruction
                 if (tts != null && !tts.isSpeaking()){
                     Log.d(LOG_TAG, "tts to be played: " + ttsMessage);
-                    tts.setSpeechRate(1.5f);
+                    //tts.setSpeechRate(1.5f);
                     String[] splitMSGs = ttsMessage.split("\\.");
                     HashMap<String, String> map = new HashMap<String, String>();
                     map.put(TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID, "unique");
 
-                    if (splitMSGs.length == 1)
-                        tts.speak(splitMSGs[0].toString().trim(), TextToSpeech.QUEUE_FLUSH, map); // the only sentence
+                    if (splitMSGs.length == 1) {
+                        //tts.speak(splitMSGs[0].toString().trim(), TextToSpeech.QUEUE_FLUSH, map); // the only sentence
+                    }
                     else {
-                        tts.speak(splitMSGs[0].toString().trim(), TextToSpeech.QUEUE_FLUSH, null); // the first sentence
+                        //tts.speak(splitMSGs[0].toString().trim(), TextToSpeech.QUEUE_FLUSH, null); // the first sentence
                         for (int i = 1; i < splitMSGs.length - 1; i++) {
-                            tts.playSilence(350, TextToSpeech.QUEUE_ADD, null); // add pause for every period
-                            tts.speak(splitMSGs[i].toString().trim(),TextToSpeech.QUEUE_ADD, null);
+                            //tts.playSilence(350, TextToSpeech.QUEUE_ADD, null); // add pause for every period
+                            //tts.speak(splitMSGs[i].toString().trim(),TextToSpeech.QUEUE_ADD, null);
                         }
-                        tts.playSilence(350, TextToSpeech.QUEUE_ADD, null);
-                        tts.speak(splitMSGs[splitMSGs.length - 1].toString().trim(),TextToSpeech.QUEUE_ADD, map); // the last sentence
+                        //tts.playSilence(350, TextToSpeech.QUEUE_ADD, null);
+                        //tts.speak(splitMSGs[splitMSGs.length - 1].toString().trim(),TextToSpeech.QUEUE_ADD, map); // the last sentence
                     }
                 }
             }
             //this is the part used to show the guidance image
             if (msg.what == NetworkProtocol.NETWORK_RET_IMAGE || msg.what == NetworkProtocol.NETWORK_RET_ANIMATION) {
                 Bitmap feedbackImg = (Bitmap) msg.obj;
-                ImageView img = (ImageView) findViewById(R.id.guidance_image);
-                img.setImageBitmap(feedbackImg);
+                //ImageView img = (ImageView) findViewById(R.id.guidance_image);
+                //img.setImageBitmap(feedbackImg);
             }
             if (msg.what == NetworkProtocol.NETWORK_RET_DONE) {
                 notifyToken();
             }
-            */
+
         }
     };
+
+    private void screenLog(String log){
+        TextView textView = (TextView) findViewById(R.id.gabriel_log);
+        textView.setText(textView.getText() + "\n" + log);
+    }
 
     /**
      * Terminates all services.
@@ -373,4 +462,5 @@ public class GabrielClientActivity extends Activity implements TextToSpeech.OnIn
         }
     }
     /**************** End of TextToSpeech.OnInitListener ********/
+
 }

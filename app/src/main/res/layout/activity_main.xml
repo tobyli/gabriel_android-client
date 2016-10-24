@@ -7,7 +7,7 @@
     
     <LinearLayout
         android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
+        android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:weightSum="1" >
 
@@ -15,10 +15,11 @@
             android:layout_width="10dp"
             android:layout_height="fill_parent"/>
         
-        <ImageView
-            android:id="@+id/guidance_image"
-            android:layout_width="300dp"
-            android:layout_height="300dp" />
+        <TextView
+            android:id="@+id/gabriel_log"
+            android:layout_width="175dp"
+            android:layout_height="300dp"
+            android:textColor="#ffffff" />
 
         <Space
             android:layout_width="10dp"
@@ -28,7 +29,28 @@
             android:id="@+id/camera_preview"
             android:layout_width="300dp"
             android:layout_height="300dp" />
-            
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center_horizontal">
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Yes"
+            android:id="@+id/button"
+            android:onClick="YesButtonOnClick" />
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="No"
+            android:id="@+id/button2"
+            android:onClick="NoButtonOnClick" />
     </LinearLayout>
 
 </LinearLayout>
