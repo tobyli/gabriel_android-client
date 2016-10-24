@@ -64,7 +64,10 @@ public class GabrielClientActivity extends Activity implements TextToSpeech.OnIn
     private MainController mainController;
     private Context context;
 
-    private Handler promptReadingHandler = null, fakeSateMessageHandler = null;
+
+
+    private Handler promptReadingHandler = null, fakeStateMessageHandler = null;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -446,10 +449,10 @@ public class GabrielClientActivity extends Activity implements TextToSpeech.OnIn
             sensorAcc = null;
         }
 
+        if(fakeStateMessageHandler != null)
+            fakeStateMessageHandler.removeCallbacksAndMessages(null);
         if(promptReadingHandler != null)
             promptReadingHandler.removeCallbacksAndMessages(null);
-        if(fakeSateMessageHandler != null)
-            fakeSateMessageHandler.removeCallbacksAndMessages(null);
     }
 
     /**************** SensorEventListener ***********************/
