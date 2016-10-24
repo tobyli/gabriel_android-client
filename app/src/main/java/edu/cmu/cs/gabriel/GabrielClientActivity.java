@@ -64,6 +64,8 @@ public class GabrielClientActivity extends Activity implements TextToSpeech.OnIn
     private MainController mainController;
     private Context context;
 
+    private Handler promptReadingHandler = null, fakeStateMessageHandler = null;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         Log.v(LOG_TAG, "++onCreate");
@@ -170,7 +172,7 @@ public class GabrielClientActivity extends Activity implements TextToSpeech.OnIn
             screenLog("Initiatial State");
 
             //add a new thread to read out the prompt every Ns
-            final Handler promptReadingHandler = new Handler();
+            promptReadingHandler = new Handler();
             promptReadingHandler.postDelayed(new Runnable() {
                 @Override
                 public void run() {
@@ -186,7 +188,7 @@ public class GabrielClientActivity extends Activity implements TextToSpeech.OnIn
         }
         /*
         //add a new thread that fakes the StateMessage
-        final Handler fakeStateMessageHandler = new Handler();
+        fakeStateMessageHandler = new Handler();
         fakeStateMessageHandler.postDelayed(new Runnable() {
             @Override
             public void run() {
@@ -445,6 +447,11 @@ public class GabrielClientActivity extends Activity implements TextToSpeech.OnIn
             sensorManager = null;
             sensorAcc = null;
         }
+
+        if(fakeStateMessageHandler != null)
+            fakeStateMessageHandler.removeCallbacksAndMessages(null);
+        if(promptReadingHandler != null)
+            promptReadingHandler.removeCallbacksAndMessages(null);
     }
 
     /**************** SensorEventListener ***********************/
