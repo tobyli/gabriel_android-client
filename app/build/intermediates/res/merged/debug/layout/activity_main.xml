@@ -53,4 +53,4 @@
             android:onClick="NoButtonOnClick" />
     </LinearLayout>
 
-</LinearLayout><!-- From: file:/Users/toby/amos/gabriel/client/android-client/app/src/main/res/layout/activity_main.xml -->
+</LinearLayout><!-- From: file:/Users/toby/gabriel_android-client/app/src/main/res/layout/activity_main.xml -->

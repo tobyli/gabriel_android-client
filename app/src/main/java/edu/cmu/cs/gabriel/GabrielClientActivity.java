@@ -64,6 +64,8 @@ public class GabrielClientActivity extends Activity implements TextToSpeech.OnIn
     private MainController mainController;
     private Context context;
 
+    private Handler promptReadingHandler = null, fakeSateMessageHandler = null;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         Log.v(LOG_TAG, "++onCreate");
@@ -93,8 +95,7 @@ public class GabrielClientActivity extends Activity implements TextToSpeech.OnIn
     @Override
     protected void onPause() {
         Log.v(LOG_TAG, "++onPause");
-        if(tts != null)
-            tts.stop();
+
         this.terminate();
         super.onPause();
     }
@@ -102,8 +103,7 @@ public class GabrielClientActivity extends Activity implements TextToSpeech.OnIn
     @Override
     protected void onDestroy() {
         Log.v(LOG_TAG, "++onDestroy");
-        if(tts != null)
-            tts.stop();
+
         super.onDestroy();
     }
 
@@ -170,7 +170,7 @@ public class GabrielClientActivity extends Activity implements TextToSpeech.OnIn
             screenLog("Initiatial State");
 
             //add a new thread to read out the prompt every Ns
-            final Handler promptReadingHandler = new Handler();
+            promptReadingHandler = new Handler();
             promptReadingHandler.postDelayed(new Runnable() {
                 @Override
                 public void run() {
@@ -186,7 +186,7 @@ public class GabrielClientActivity extends Activity implements TextToSpeech.OnIn
         }
         /*
         //add a new thread that fakes the StateMessage
-        final Handler fakeStateMessageHandler = new Handler();
+        fakeStateMessageHandler = new Handler();
         fakeStateMessageHandler.postDelayed(new Runnable() {
             @Override
             public void run() {
@@ -445,6 +445,11 @@ public class GabrielClientActivity extends Activity implements TextToSpeech.OnIn
             sensorManager = null;
             sensorAcc = null;
         }
+
+        if(promptReadingHandler != null)
+            promptReadingHandler.removeCallbacksAndMessages(null);
+        if(fakeSateMessageHandler != null)
+            fakeSateMessageHandler.removeCallbacksAndMessages(null);
     }
 
     /**************** SensorEventListener ***********************/
