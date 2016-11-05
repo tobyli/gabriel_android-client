@@ -85,9 +85,10 @@ public class MainController {
     public void init(){
         //create the states
         State initialState = new State("Initial state for the script", "initialState", "Initial State. Please say Yes to continue.", State.INITIAL_STATE);
-        State adultDetectionState = new State("Detecting if the human is an adult", "adultDetectionState", "Is the human in front of you an adult?", State.NORMAL_STATE);
-        State adultDetectionNoState  = new State("Human detected as a child", "adultDetectionErrorState", "The human in front of you is identified as a child, is that correct?", State.NORMAL_STATE);
-        State adultDetectionYesState = new State("Human detected as a adult", "adultDetectionYesState", "The human in front of you is identified as an adult, is that correct?", State.NORMAL_STATE);
+
+        State subjectAgeDetectionState = new State("Detecting if the human is an adult", "subjectAgeDetectionState", "Is the human in front of you an adult?", State.NORMAL_STATE);
+        State adultDetectedState  = new State("Human detected as a child", "adultDetectedState", "The human in front of you is identified as a child, is that correct?", State.NORMAL_STATE);
+        State childDetectedState = new State("Human detected as a adult", "childDetectedState", "The human in front of you is identified as an adult, is that correct?", State.NORMAL_STATE);
 
 
         State showPadState = new State("Show the pad to the glass, is the pad shown red?", "showPadState", "Please pick the adult pad and hold the pad in front of you. Is the pad shown red?", State.NORMAL_STATE);
@@ -104,16 +105,16 @@ public class MainController {
 
 
         //linked the states together
-        initialState.setNextState(adultDetectionState);
+        initialState.setNextState(subjectAgeDetectionState);
         initialState.setErrorState(initialState);
-        adultDetectionState.setNextState(adultDetectionYesState);
-        adultDetectionState.setErrorState(adultDetectionNoState);
+        subjectAgeDetectionState.setNextState(adultDetectedState);
+        subjectAgeDetectionState.setErrorState(childDetectedState);
 
-        adultDetectionNoState.setNextState(showChildPadState);
-        adultDetectionNoState.setErrorState(adultDetectionState);
+        childDetectedState.setNextState(showChildPadState);
+        childDetectedState.setErrorState(subjectAgeDetectionState);
 
-        adultDetectionYesState.setNextState(showPadState);
-        adultDetectionYesState.setErrorState(adultDetectionState);
+        adultDetectedState.setNextState(showPadState);
+        adultDetectedState.setErrorState(subjectAgeDetectionState);
 
         showPadState.setNextState(putPadOnLeftChestState);
         showPadState.setErrorState(showPadErrorState);
