@@ -24,6 +24,10 @@ import android.os.Handler;
 import android.os.Message;
 import android.util.Base64;
 import android.util.Log;
+import android.widget.Toast;
+
+import edu.cmu.cs.gabriel.aedassistant.MainController;
+import edu.cmu.cs.gabriel.aedassistant.StateMessage;
 import edu.cmu.cs.gabriel.token.ReceivedPacketInfo;
 
 public class ResultReceivingThread extends Thread {
@@ -39,6 +43,7 @@ public class ResultReceivingThread extends Thread {
     private DataOutputStream networkWriter;
     private DataInputStream networkReader;
 
+
     private Handler returnMsgHandler;
 
     // animation
@@ -47,11 +52,12 @@ public class ResultReceivingThread extends Thread {
     private int[] animationPeriods = new int[2]; // how long each frame is shown, in millisecond
     private int animationDisplayIdx = -1;
     private int nAnimationFrames = -1;
-
+    private MainController mainController;
     
-    public ResultReceivingThread(String serverIP, int port, Handler returnMsgHandler) {
+    public ResultReceivingThread(String serverIP, int port, Handler returnMsgHandler, MainController mainController) {
         isRunning = false;
         this.returnMsgHandler = returnMsgHandler;
+        this.mainController = mainController;
         try {
             remoteIP = InetAddress.getByName(serverIP);
         } catch (UnknownHostException e) {
@@ -137,12 +143,68 @@ public class ResultReceivingThread extends Thread {
         int dataSize=-1;
         Bitmap imageFeedback = null;
 
+        int messageType = -1;
+        String stateIdentifier = "";
+
         try {
+
             JSONObject recvJSON = new JSONObject(recvData);
-            frameID = recvJSON.getLong(NetworkProtocol.HEADER_MESSAGE_FRAME_ID);
-            engineID = recvJSON.getString(NetworkProtocol.HEADER_MESSAGE_ENGINE_ID);
-            status=recvJSON.getString(NetworkProtocol.HEADER_MESSAGE_STATUS);
-            dataSize=recvJSON.getInt(NetworkProtocol.HEADER_MESSAGE_DATA_SIZE);
+            System.out.println("JSON: " + recvData + "\n\n");
+
+            try {
+                frameID = recvJSON.getLong(NetworkProtocol.HEADER_MESSAGE_FRAME_ID);
+            }
+            catch (Exception e){
+                //no frame id in the header
+            }
+
+
+            try {
+                engineID = recvJSON.getString(NetworkProtocol.HEADER_MESSAGE_ENGINE_ID);
+            }
+            catch (Exception e){
+                //no engine id in the header
+            }
+
+
+            try {
+                status = recvJSON.getString(NetworkProtocol.HEADER_MESSAGE_STATUS);
+            }
+            catch (Exception e){
+                //no status in the header
+            }
+
+
+            try {
+                dataSize = recvJSON.getInt(NetworkProtocol.HEADER_MESSAGE_DATA_SIZE);
+            }
+            catch (Exception e){
+                //no data size in the header
+            }
+
+            try{
+                messageType = recvJSON.getInt("messageType");
+                System.out.println("messageType: " + messageType);
+            }
+            catch (Exception e){
+                //no messageType in the header
+            }
+
+            try{
+                stateIdentifier = recvJSON.getString("stateIdentifier");
+                System.out.println("stateIdentifier: " + stateIdentifier);
+            }
+            catch (Exception e){
+                //no state identifier in the header
+            }
+
+            if(stateIdentifier.length() > 0 && messageType > 0){
+                Log.i("LOG", "Received message with stateIdentifier " + stateIdentifier + "and messageType " + messageType);
+                StateMessage message = new StateMessage(stateIdentifier, messageType);
+                System.out.println("AAAH " + message.getStateIdentifier() + " : " + message.messageType);
+                mainController.handleStateMessage(message);
+            }
+
 
             Message msg = Message.obtain();
             msg.what = NetworkProtocol.NETWORK_RET_MESSAGE;

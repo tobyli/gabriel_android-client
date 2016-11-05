@@ -14,12 +14,20 @@
         <Space
             android:layout_width="10dp"
             android:layout_height="fill_parent"/>
-        
-        <TextView
-            android:id="@+id/gabriel_log"
+
+        <ScrollView
+            android:id="@+id/SCROLLER_ID"
             android:layout_width="175dp"
             android:layout_height="300dp"
-            android:textColor="#ffffff" />
+            android:scrollbars="vertical"
+            android:fillViewport="true">
+        <TextView
+            android:id="@+id/gabriel_log"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:textColor="#ffffff"
+            android:layout_gravity="bottom"/>
+        </ScrollView>
 
         <Space
             android:layout_width="10dp"

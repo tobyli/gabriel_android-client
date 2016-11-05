@@ -9,6 +9,7 @@ import java.util.TimerTask;
 import android.app.Activity;
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.hardware.Camera;
 import android.hardware.Camera.PreviewCallback;
 import android.hardware.Sensor;
@@ -20,6 +21,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.speech.tts.TextToSpeech;
 import android.speech.tts.UtteranceProgressListener;
+import android.text.Html;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -27,6 +29,8 @@ import android.view.View;
 import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
+
 import com.google.android.glass.view.WindowUtils;
 
 
@@ -211,10 +215,17 @@ public class GabrielClientActivity extends Activity implements TextToSpeech.OnIn
         if(mainController != null && mainController.getCurrentState() != null && mainController.getCurrentState().stateType != State.ENDING_STATE) {
             StateMessage stateMessage = new StateMessage(mainController.getCurrentState().getIdentifier(), StateMessage.NEXT_STATE);
             mainController.handleStateMessage(stateMessage);
-            screenLog("SENT A \"NEXT\" MESSAGE");
+            screenLog("U: " + "Yes", "#42f4f4");
+            //screenLog("SENT A \"NEXT\" MESSAGE");
+            screenLog("A: " + mainController.getCurrentState().getPrompt(), "#f89ff9");
+
+            //show the ending state
+            if(mainController.getCurrentState().stateType == State.ENDING_STATE)
+                YesButtonOnClick(view);
+
         }
         else if(mainController != null && mainController.getCurrentState() != null && mainController.getCurrentState().stateType == State.ENDING_STATE) {
-            screenLog("REACH THE ENDING STATE");
+            screenLog("REACH THE ENDING STATE", "#ffffff");
         }
     }
 
@@ -222,10 +233,12 @@ public class GabrielClientActivity extends Activity implements TextToSpeech.OnIn
         if(mainController != null && mainController.getCurrentState() != null && mainController.getCurrentState().stateType != State.ENDING_STATE) {
             StateMessage stateMessage = new StateMessage(mainController.getCurrentState().getIdentifier(), StateMessage.ERROR_STATE);
             mainController.handleStateMessage(stateMessage);
-            screenLog("SENT A \"ERROR\" MESSAGE");
+            screenLog("U: " + "No", "#42f4f4");
+            //screenLog("SENT A \"ERROR\" MESSAGE");
+            screenLog("A: " + mainController.getCurrentState().getPrompt(), "#f89ff9");
         }
         else if(mainController != null && mainController.getCurrentState() != null && mainController.getCurrentState().stateType == State.ENDING_STATE) {
-            screenLog("REACH THE ENDING STATE");
+            screenLog("REACH THE ENDING STATE", "#ffffff");
         }
     }
     
@@ -256,16 +269,16 @@ public class GabrielClientActivity extends Activity implements TextToSpeech.OnIn
                 isFirstExperiment = false;
             } else {
                 try {
-                    Thread.sleep(20*1000);
+                    Thread.sleep(20 * 1000);
                 } catch (InterruptedException e) {}
             }
         }
 
         tokenController = new TokenController(tokenSize, latencyFile);
-        resultThread = new ResultReceivingThread(serverIP, Const.RESULT_RECEIVING_PORT, returnMsgHandler);
+        resultThread = new ResultReceivingThread(serverIP, Const.RESULT_RECEIVING_PORT, returnMsgHandler, mainController);
         resultThread.start();
 
-        videoStreamingThread = new VideoStreamingThread(serverIP, Const.VIDEO_STREAM_PORT, returnMsgHandler, tokenController);
+        videoStreamingThread = new VideoStreamingThread(serverIP, Const.VIDEO_STREAM_PORT, returnMsgHandler, tokenController, mainController);
         videoStreamingThread.start();
 
 
@@ -367,8 +380,15 @@ public class GabrielClientActivity extends Activity implements TextToSpeech.OnIn
             }
 
             if (msg.what == NetworkProtocol.NETWORK_RET_SPEECH) {
-                String ttsMessage = (String) msg.obj;
+
+                String message = (String) msg.obj;
+                System.out.println(message);
+                System.out.println("\n" + msg + "\n");
+
+                Toast.makeText(context, message, Toast.LENGTH_SHORT).show();
                 //this is the part used to speat out the instruction
+
+                /*
                 if (tts != null && !tts.isSpeaking()){
                     Log.d(LOG_TAG, "tts to be played: " + ttsMessage);
                     //tts.setSpeechRate(1.5f);
@@ -388,7 +408,9 @@ public class GabrielClientActivity extends Activity implements TextToSpeech.OnIn
                         //tts.playSilence(350, TextToSpeech.QUEUE_ADD, null);
                         //tts.speak(splitMSGs[splitMSGs.length - 1].toString().trim(),TextToSpeech.QUEUE_ADD, map); // the last sentence
                     }
+
                 }
+                */
             }
             //this is the part used to show the guidance image
             if (msg.what == NetworkProtocol.NETWORK_RET_IMAGE || msg.what == NetworkProtocol.NETWORK_RET_ANIMATION) {
@@ -404,13 +426,20 @@ public class GabrielClientActivity extends Activity implements TextToSpeech.OnIn
     };
 
     private void screenLog(String log){
-        TextView textView = (TextView) findViewById(R.id.gabriel_log);
-        textView.setText(textView.getText() + "\n" + log);
+        screenLog(log, "#000000");
     }
 
-    /**
-     * Terminates all services.
-     */
+    private void screenLog(String log, String color) {
+        TextView textView = (TextView) findViewById(R.id.gabriel_log);
+        String html = "";
+        if(textView.getEditableText() != null)
+            html = Html.toHtml(textView.getEditableText());
+        textView.setText(Html.fromHtml(html + " " + "<font color = \"" + color.toString() +"\">" + log + "</font>"), TextView.BufferType.EDITABLE);
+    }
+
+        /**
+         * Terminates all services.
+         */
     private void terminate() {
         Log.v(LOG_TAG, "++terminate");
         

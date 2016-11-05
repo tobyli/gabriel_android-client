@@ -22,4 +22,7 @@ public class NetworkProtocol {
     public static final String HEADER_MESSAGE_IMAGE = "image";
     public static final String HEADER_MESSAGE_ANIMATION = "animation";
     public static final String HEADER_MESSAGE_SPEECH = "speech";
+
+    public static final String HEADER_MESSAGE_STATE_IDENTIFIER = "stateIdentifier";
+
 }

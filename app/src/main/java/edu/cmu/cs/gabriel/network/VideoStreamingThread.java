@@ -28,6 +28,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
 import edu.cmu.cs.gabriel.Const;
+import edu.cmu.cs.gabriel.aedassistant.MainController;
 import edu.cmu.cs.gabriel.token.TokenController;
 
 public class VideoStreamingThread extends Thread {
@@ -61,10 +62,13 @@ public class VideoStreamingThread extends Thread {
     private Handler networkHandler = null;
     private TokenController tokenController = null;
 
-    public VideoStreamingThread(String serverIP, int port, Handler handler, TokenController tokenController) {
+    private MainController mainController = null;
+
+    public VideoStreamingThread(String serverIP, int port, Handler handler, TokenController tokenController, MainController mainController) {
         isRunning = false;
         this.networkHandler = handler;
         this.tokenController = tokenController;
+        this.mainController = mainController;
 
         try {
             remoteIP = InetAddress.getByName(serverIP);
@@ -251,7 +255,7 @@ public class VideoStreamingThread extends Thread {
                 // make it as a single packet
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
                 DataOutputStream dos = new DataOutputStream(baos);
-                byte[] header = ("{\"" + NetworkProtocol.HEADER_MESSAGE_FRAME_ID + "\":" + sendingFrameID + "}").getBytes();
+                byte[] header = ("{\"" + NetworkProtocol.HEADER_MESSAGE_FRAME_ID + "\":" + sendingFrameID + ", \"" + NetworkProtocol.HEADER_MESSAGE_STATE_IDENTIFIER + "\":\"" + mainController.getCurrentState().getIdentifier() +  "\"}").getBytes();
                 dos.writeInt(header.length);
                 dos.write(header);
                 dos.writeInt(data.length);
@@ -260,6 +264,7 @@ public class VideoStreamingThread extends Thread {
                 // send packet and consume tokens
                 this.tokenController.logSentPacket(sendingFrameID, dataTime, compressedTime);
                 this.tokenController.decreaseToken();
+                System.out.println(header);
                 networkWriter.write(baos.toByteArray());
                 networkWriter.flush();
                 

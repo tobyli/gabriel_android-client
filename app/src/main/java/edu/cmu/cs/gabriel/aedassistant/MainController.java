@@ -29,7 +29,7 @@ public class MainController {
 
     //TODO: state message should be priority-queued by time stamp
     public void handleStateMessage(StateMessage message){
-        if(message.getStateIdentifier() != currentState.getIdentifier()) {
+        if(!message.getStateIdentifier().contentEquals(currentState.getIdentifier())) {
             //wrong identifier received
             Log.w("CONTROLLER", "Wrong identifier received, received " + message.getStateIdentifier() + " expecting " + currentState.getIdentifier());
             //do nothing
@@ -84,25 +84,60 @@ public class MainController {
 
     public void init(){
         //create the states
-        State initialState = new State("Initial state for the script", "initialState", "Initial State", State.INITIAL_STATE);
+        State initialState = new State("Initial state for the script", "initialState", "Initial State. Please say Yes to continue.", State.INITIAL_STATE);
+        State adultDetectionState = new State("Detecting if the human is an adult", "adultDetectionState", "Is the human in front of you an adult?", State.NORMAL_STATE);
+        State adultDetectionNoState  = new State("Human detected as a child", "adultDetectionErrorState", "The human in front of you is identified as a child, is that correct?", State.NORMAL_STATE);
+        State adultDetectionYesState = new State("Human detected as a adult", "adultDetectionYesState", "The human in front of you is identified as an adult, is that correct?", State.NORMAL_STATE);
+
+
         State showPadState = new State("Show the pad to the glass, is the pad shown red?", "showPadState", "Please pick the adult pad and hold the pad in front of you. Is the pad shown red?", State.NORMAL_STATE);
-        State showPadErrorState = new State("Wrong pad shown to the glass", "showPadErrorState", "Wrong pad selected! Please pick the adult pad, which is the pad with read label. Is the pad shown red?", State.NORMAL_STATE);
-        State putPadOnLeftChestState = new State("Put the pad on the face.", "putPadOnLeftChestState", "Please put the pad on the face of the dummy. Is the pad on the face now?", State.NORMAL_STATE);
-        State putPadOnLeftChestErrorState = new State("Wrong location for the pad.", "putPadOnLeftChestErrorState", "Wrong location for the pad! Please put the pad on the face of the dummy. Is the pad on the face now?", State.NORMAL_STATE);
+        State showPadErrorState = new State("Wrong pad shown to the glass", "showPadErrorState", "Wrong pad selected! Please pick the adult pad, which is the pad with red label. Is the pad shown red?", State.NORMAL_STATE);
+
+        State showChildPadState = new State("Show the pad to the glass, is the pad shown blue?", "showChildPadState", "Please pick the child pad and hold the pad in front of you. Is the pad shown blue?", State.NORMAL_STATE);
+        State showChildPadErrorState = new State("Wrong pad shown to the glass", "showChildPadErrorState", "Wrong pad selected! Please pick the child pad, which is the pad with blue label. Is the pad shown blue?", State.NORMAL_STATE);
+
+        State putPadOnLeftChestState = new State("Put the pad on the left chest of the dummy.", "putPadOnLeftChestState", "Please put the pad on the left chest of the dummy. Is the pad on the left chest now?", State.NORMAL_STATE);
+        State putPadOnLeftChestErrorState = new State("Wrong location for the pad.", "putPadOnLeftChestErrorState", "Wrong location for the pad! Please put the pad on the left chest of the dummy. Is the pad on the left chest now?", State.NORMAL_STATE);
+        State putPadOnRightTorsoState =  new State("Put the other pad on the right torso of the dummy.", "putPadOnRightTorsoState", "Please put the other pad on the right torso of the dummy. Is the pad on the right torso now?", State.NORMAL_STATE);
+        State putPadOnRightTorsoErrorState = new State("Wrong location for the pad.", "putPadOnRightTorsoErrorState", "Wrong location for the pad! Please put the other pad on the right torso of the dummy. Is the pad on the right torso now?", State.NORMAL_STATE);
         State finalState = new State("Dummy is dead", "finalState", "This guy is dead. Mission completed!", State.ENDING_STATE);
 
+
         //linked the states together
-        initialState.setNextState(showPadState);
+        initialState.setNextState(adultDetectionState);
         initialState.setErrorState(initialState);
+        adultDetectionState.setNextState(adultDetectionYesState);
+        adultDetectionState.setErrorState(adultDetectionNoState);
+
+        adultDetectionNoState.setNextState(showChildPadState);
+        adultDetectionNoState.setErrorState(adultDetectionState);
+
+        adultDetectionYesState.setNextState(showPadState);
+        adultDetectionYesState.setErrorState(adultDetectionState);
+
         showPadState.setNextState(putPadOnLeftChestState);
         showPadState.setErrorState(showPadErrorState);
+
         showPadErrorState.setNextState(putPadOnLeftChestState);
         showPadErrorState.setErrorState(showPadErrorState);
-        putPadOnLeftChestState.setNextState(finalState);
+
+        showChildPadState.setNextState(putPadOnLeftChestState);
+        showChildPadState.setErrorState(showChildPadErrorState);
+
+        showChildPadErrorState.setNextState(putPadOnLeftChestState);
+        showChildPadErrorState.setErrorState(showChildPadErrorState);
+
+        putPadOnLeftChestState.setNextState(putPadOnRightTorsoState);
         putPadOnLeftChestState.setErrorState(putPadOnLeftChestErrorState);
-        putPadOnLeftChestErrorState.setNextState(finalState);
+
+        putPadOnLeftChestErrorState.setNextState(putPadOnRightTorsoState);
         putPadOnLeftChestErrorState.setErrorState(putPadOnLeftChestErrorState);
 
+        putPadOnRightTorsoState.setNextState(finalState);
+        putPadOnRightTorsoState.setErrorState(putPadOnRightTorsoErrorState);
+
+        putPadOnRightTorsoErrorState.setNextState(finalState);
+        putPadOnRightTorsoErrorState.setErrorState(putPadOnRightTorsoErrorState);
 
         //use the first state as the current state
         currentState = initialState;
