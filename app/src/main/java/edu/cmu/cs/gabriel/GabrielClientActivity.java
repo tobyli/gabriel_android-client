@@ -174,7 +174,7 @@ public class GabrielClientActivity extends Activity implements TextToSpeech.OnIn
         // initiate the main controller
         if(mainController != null && mainController.active == false) {
             mainController.init();
-            screenLog("Initiatial State");
+            screenLog("Initial State");
 
             //add a new thread to read out the prompt every Ns
             promptReadingHandler = new Handler();
@@ -183,7 +183,7 @@ public class GabrielClientActivity extends Activity implements TextToSpeech.OnIn
                 public void run() {
                     try {
                         if (mainController != null && mainController.getCurrentState() != null && mainController.getCurrentState().stateType != State.ENDING_STATE)
-                            mainController.readOutCurrentPrompt();
+                            mainController.readOutCurrentPrompt(true);
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
