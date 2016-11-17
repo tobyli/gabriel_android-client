@@ -18,6 +18,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.app.Activity;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Handler;
@@ -26,6 +27,7 @@ import android.util.Base64;
 import android.util.Log;
 import android.widget.Toast;
 
+import edu.cmu.cs.gabriel.GabrielClientActivity;
 import edu.cmu.cs.gabriel.aedassistant.MainController;
 import edu.cmu.cs.gabriel.aedassistant.StateMessage;
 import edu.cmu.cs.gabriel.token.ReceivedPacketInfo;
@@ -53,11 +55,13 @@ public class ResultReceivingThread extends Thread {
     private int animationDisplayIdx = -1;
     private int nAnimationFrames = -1;
     private MainController mainController;
+    private GabrielClientActivity mainActivity;
     
-    public ResultReceivingThread(String serverIP, int port, Handler returnMsgHandler, MainController mainController) {
+    public ResultReceivingThread(String serverIP, int port, Handler returnMsgHandler, MainController mainController, GabrielClientActivity mainActivity) {
         isRunning = false;
         this.returnMsgHandler = returnMsgHandler;
         this.mainController = mainController;
+        this.mainActivity = mainActivity;
         try {
             remoteIP = InetAddress.getByName(serverIP);
         } catch (UnknownHostException e) {
@@ -198,11 +202,15 @@ public class ResultReceivingThread extends Thread {
                 //no state identifier in the header
             }
 
-            if(stateIdentifier.length() > 0 && messageType > 0){
+            if(stateIdentifier.length() > 0 && (messageType == 1 || messageType == 2)){
                 Log.i("LOG", "Received message with stateIdentifier " + stateIdentifier + "and messageType " + messageType);
                 StateMessage message = new StateMessage(stateIdentifier, messageType);
-                System.out.println("AAAH " + message.getStateIdentifier() + " : " + message.messageType);
                 mainController.handleStateMessage(message);
+                mainActivity.runOnUiThread(new Runnable() {
+                    public void run() {
+                        mainActivity.screenLog("A: " + mainController.getCurrentState().getPrompt(), "#f89ff9");
+                    }
+                });
             }
 
 
@@ -321,4 +329,6 @@ public class ResultReceivingThread extends Thread {
         msg.obj = errorMessage;
         this.returnMsgHandler.sendMessage(msg);
     }
+
+
 }

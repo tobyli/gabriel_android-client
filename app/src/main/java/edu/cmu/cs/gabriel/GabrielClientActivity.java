@@ -22,6 +22,7 @@ import android.os.Message;
 import android.speech.tts.TextToSpeech;
 import android.speech.tts.UtteranceProgressListener;
 import android.text.Html;
+import android.text.format.Time;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -128,7 +129,7 @@ public class GabrielClientActivity extends Activity implements TextToSpeech.OnIn
     public boolean onMenuItemSelected(int featureId, MenuItem item) {
         if(featureId == WindowUtils.FEATURE_VOICE_COMMANDS){
             if(tts != null)
-                tts.speak(item.getTitle().toString(), TextToSpeech.QUEUE_ADD, null);
+                //tts.speak(item.getTitle().toString(), TextToSpeech.QUEUE_ADD, null);
             if(item.getTitle().toString().contentEquals("Yes")){
                 YesButtonOnClick(null);
             }
@@ -167,30 +168,33 @@ public class GabrielClientActivity extends Activity implements TextToSpeech.OnIn
         isRunning = true;
     }
 
-    private void initAEDAssistant(){
+    private void initAEDAssistant() {
         // initiate the main controller
-        if(mainController == null)
-            mainController = new MainController(this);
-        // initiate the main controller
-        if(mainController != null && mainController.active == false) {
-            mainController.init();
-            screenLog("Initial State");
+        if (mainController == null) {
+            TextView textView = (TextView) findViewById(R.id.gabriel_log);
+            mainController = new MainController(this, textView);
+            // initiate the main controller
+            if (mainController != null && mainController.active == false) {
+                mainController.init();
+                screenLog("Initial State");
 
-            //add a new thread to read out the prompt every Ns
-            promptReadingHandler = new Handler();
-            promptReadingHandler.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        if (mainController != null && mainController.getCurrentState() != null && mainController.getCurrentState().stateType != State.ENDING_STATE)
-                            mainController.readOutCurrentPrompt(true);
-                    } catch (Exception e) {
-                        e.printStackTrace();
+                //add a new thread to read out the prompt every Ns
+                promptReadingHandler = new Handler();
+                promptReadingHandler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            if (mainController != null && mainController.getCurrentState() != null && mainController.getCurrentState().stateType != State.ENDING_STATE)
+                                mainController.readOutCurrentPrompt(true);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                        promptReadingHandler.postDelayed(this, AEDAssistantConst.VOICE_PROMPT_DELAY);
                     }
-                    promptReadingHandler.postDelayed(this, AEDAssistantConst.VOICE_PROMPT_DELAY);
-                }
-            }, AEDAssistantConst.VOICE_PROMPT_DELAY);
-        }
+                }, AEDAssistantConst.VOICE_PROMPT_DELAY);
+            }
+            //print the initial message
+            screenLog("A: " + mainController.getCurrentState().getPrompt(), "#f89ff9");
         /*
         //add a new thread that fakes the StateMessage
         fakeStateMessageHandler = new Handler();
@@ -209,16 +213,16 @@ public class GabrielClientActivity extends Activity implements TextToSpeech.OnIn
             }
         }, AEDAssistantConst.FAKE_MESSAGE_DELAY);
         */
+        }
     }
 
     public void YesButtonOnClick(View view){
         if(mainController != null && mainController.getCurrentState() != null && mainController.getCurrentState().stateType != State.ENDING_STATE) {
             StateMessage stateMessage = new StateMessage(mainController.getCurrentState().getIdentifier(), StateMessage.NEXT_STATE);
-            mainController.handleStateMessage(stateMessage);
             screenLog("U: " + "Yes", "#42f4f4");
-            //screenLog("SENT A \"NEXT\" MESSAGE");
+            mainController.handleStateMessage(stateMessage);
             screenLog("A: " + mainController.getCurrentState().getPrompt(), "#f89ff9");
-
+            //screenLog("SENT A \"NEXT\" MESSAGE");
             //show the ending state
             if(mainController.getCurrentState().stateType == State.ENDING_STATE)
                 YesButtonOnClick(view);
@@ -232,9 +236,8 @@ public class GabrielClientActivity extends Activity implements TextToSpeech.OnIn
     public void NoButtonOnClick(View view){
         if(mainController != null && mainController.getCurrentState() != null && mainController.getCurrentState().stateType != State.ENDING_STATE) {
             StateMessage stateMessage = new StateMessage(mainController.getCurrentState().getIdentifier(), StateMessage.ERROR_STATE);
-            mainController.handleStateMessage(stateMessage);
             screenLog("U: " + "No", "#42f4f4");
-            //screenLog("SENT A \"ERROR\" MESSAGE");
+            mainController.handleStateMessage(stateMessage);
             screenLog("A: " + mainController.getCurrentState().getPrompt(), "#f89ff9");
         }
         else if(mainController != null && mainController.getCurrentState() != null && mainController.getCurrentState().stateType == State.ENDING_STATE) {
@@ -275,7 +278,7 @@ public class GabrielClientActivity extends Activity implements TextToSpeech.OnIn
         }
 
         tokenController = new TokenController(tokenSize, latencyFile);
-        resultThread = new ResultReceivingThread(serverIP, Const.RESULT_RECEIVING_PORT, returnMsgHandler, mainController);
+        resultThread = new ResultReceivingThread(serverIP, Const.RESULT_RECEIVING_PORT, returnMsgHandler, mainController, this);
         resultThread.start();
 
         videoStreamingThread = new VideoStreamingThread(serverIP, Const.VIDEO_STREAM_PORT, returnMsgHandler, tokenController, mainController);
@@ -425,16 +428,19 @@ public class GabrielClientActivity extends Activity implements TextToSpeech.OnIn
         }
     };
 
-    private void screenLog(String log){
+    public void screenLog(String log){
         screenLog(log, "#000000");
     }
 
-    private void screenLog(String log, String color) {
+    public void screenLog(String log, String color) {
         TextView textView = (TextView) findViewById(R.id.gabriel_log);
         String html = "";
+        if(textView.getText().toString().length() > 160)
+            textView.setText("");
         if(textView.getEditableText() != null)
             html = Html.toHtml(textView.getEditableText());
         textView.setText(Html.fromHtml(html + " " + "<font color = \"" + color.toString() +"\">" + log + "</font>"), TextView.BufferType.EDITABLE);
+        textView.invalidate();
     }
 
         /**
@@ -483,6 +489,8 @@ public class GabrielClientActivity extends Activity implements TextToSpeech.OnIn
         if(promptReadingHandler != null)
             promptReadingHandler.removeCallbacksAndMessages(null);
     }
+
+
 
     /**************** SensorEventListener ***********************/
     // TODO: test accelerometer streaming

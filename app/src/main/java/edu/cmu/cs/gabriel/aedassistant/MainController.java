@@ -2,8 +2,13 @@ package edu.cmu.cs.gabriel.aedassistant;
 
 import android.content.Context;
 import android.speech.tts.TextToSpeech;
+import android.text.Html;
 import android.util.Log;
 import android.text.format.Time;
+import android.widget.TextView;
+
+import edu.cmu.cs.gabriel.GabrielClientActivity;
+import edu.cmu.cs.gabriel.R;
 
 /**
  * @author toby
@@ -17,10 +22,12 @@ public class MainController {
     private TextToSpeech tts;
     private Time lastTtsTime = new Time();
     private Context context;
+    private TextView textView;
     //TODO: the prompt of the current state should be read out every Ns
 
-    public MainController(Context context){
+    public MainController(Context context, TextView textView){
         this.context = context;
+        this.textView = textView;
         if (tts == null) {
             tts = new TextToSpeech(context, null);
         }
@@ -39,6 +46,9 @@ public class MainController {
                 //do nothing
             }
             else{
+                //mainActivity.screenLog("A: " + getCurrentState().getPrompt(), "#f89ff9");
+
+
                 //correct identifier received
                 try {
                     switch (message.messageType) {
@@ -100,7 +110,6 @@ public class MainController {
             }
         }
         tts.stop();
-        //while (tts.isSpeaking()) {/* nothing to do. just wait*/}
         tts.speak(currentState.getPrompt(), TextToSpeech.QUEUE_FLUSH, null);
         lastTtsTime.setToNow();
     }
@@ -189,6 +198,20 @@ public class MainController {
     public void destroy(){
         currentState = null;
     }
+
+    public void screenLog(String log){
+        screenLog(log, "#000000");
+    }
+
+    public void screenLog(String log, String color) {
+        String html = "";
+        if(textView.getEditableText() != null)
+            html = Html.toHtml(textView.getEditableText());
+        textView.setText(Html.fromHtml(html + " " + "<font color = \"" + color.toString() +"\">" + log + "</font>"), TextView.BufferType.EDITABLE);
+        textView.invalidate();
+    }
+
+
 
 
 
