@@ -10,5 +10,7 @@ public class AEDAssistantConst {
     //delay for recurring voice prompt in ms
     public static final int VOICE_PROMPT_DELAY = 20000;
     public static final int FAKE_MESSAGE_DELAY = 20000;
+    public static final int CHECK_CONNECTION_DELAY = 3000;
+    public static final int CHECK_CONNECTION_THRESHOLD = 7000;
 
 }

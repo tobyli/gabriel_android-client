@@ -1,6 +1,7 @@
 package edu.cmu.cs.gabriel;
 
 import java.io.File;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Timer;
@@ -72,6 +73,7 @@ public class GabrielClientActivity extends Activity implements TextToSpeech.OnIn
 
 
     private Handler promptReadingHandler = null, fakeStateMessageHandler = null;
+    private Handler checkConnectionHandler = null;
 
 
     @Override
@@ -195,6 +197,19 @@ public class GabrielClientActivity extends Activity implements TextToSpeech.OnIn
             }
             //print the initial message
             screenLog("A: " + mainController.getCurrentState().getPrompt(), "#f89ff9");
+
+            checkConnectionHandler = new Handler();
+            checkConnectionHandler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    long currentTime = Calendar.getInstance().getTimeInMillis();
+                    if(mainController.isConnected == true && (currentTime - mainController.lastMessageReceivedTimeStamp > AEDAssistantConst.CHECK_CONNECTION_THRESHOLD)){
+                        mainController.isConnected = false;
+                        screenLog("Disconnected to the Gabriel Server", "#ffffff");
+                    }
+                    checkConnectionHandler.postDelayed(this, AEDAssistantConst.CHECK_CONNECTION_DELAY);
+                }
+            }, AEDAssistantConst.CHECK_CONNECTION_DELAY);
         /*
         //add a new thread that fakes the StateMessage
         fakeStateMessageHandler = new Handler();

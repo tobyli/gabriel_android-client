@@ -7,6 +7,8 @@ import android.util.Log;
 import android.text.format.Time;
 import android.widget.TextView;
 
+import java.util.Calendar;
+
 import edu.cmu.cs.gabriel.GabrielClientActivity;
 import edu.cmu.cs.gabriel.R;
 
@@ -17,6 +19,8 @@ import edu.cmu.cs.gabriel.R;
  */
 public class MainController {
     public boolean active = false;
+    public long lastMessageReceivedTimeStamp;
+    public boolean isConnected = false;
     private Object messageMutex = new Object();
     private State currentState;
     private TextToSpeech tts;
@@ -28,6 +32,7 @@ public class MainController {
     public MainController(Context context, TextView textView){
         this.context = context;
         this.textView = textView;
+        this.lastMessageReceivedTimeStamp = Calendar.getInstance().getTimeInMillis();
         if (tts == null) {
             tts = new TextToSpeech(context, null);
         }
@@ -47,8 +52,6 @@ public class MainController {
             }
             else{
                 //mainActivity.screenLog("A: " + getCurrentState().getPrompt(), "#f89ff9");
-
-
                 //correct identifier received
                 try {
                     switch (message.messageType) {
@@ -110,7 +113,10 @@ public class MainController {
             }
         }
         tts.stop();
-        tts.speak(currentState.getPrompt(), TextToSpeech.QUEUE_FLUSH, null);
+        if(isConnected)
+            tts.speak(currentState.getPrompt(), TextToSpeech.QUEUE_FLUSH, null);
+        else
+            tts.speak(currentState.getDisconnectedPrompt(), TextToSpeech.QUEUE_FLUSH, null);
         lastTtsTime.setToNow();
     }
 
@@ -118,12 +124,17 @@ public class MainController {
         //create the states
         State initialState = new State("Initial state", "initialState", "AED Assistant ready. Say yes to continue.", State.INITIAL_STATE);
 
-        State subjectAgeDetectionState = new State("Detecting if the human is an adult", "subjectAgeDetectionState", "", State.NORMAL_STATE);
+        State subjectAgeDetectionState = new State("Detecting if the human is an adult", "subjectAgeDetectionState", "Now detecting if the subject is an adult", State.NORMAL_STATE);
+        //specify a special message to speak if the client is disconneced to the gabriel server
+        subjectAgeDetectionState.setDisconnectedPrompt("Is the subject an adult or a child? Say yes if the subject is an adult");
 
         State adultDetectedState  = new State("Human detected as an adult", "adultDetectedState", "The subject seems to be an adult. Is this correct?", State.NORMAL_STATE);
         State childDetectedState = new State("Human detected as a child", "childDetectedState", "The subject seems to be a child. Is this correct?", State.NORMAL_STATE);
 
         State showAdultPadState = new State("State to detect adult pads", "showAdultPadState", "Please pick the pads with the red instructions and put them in front of the camera.", State.NORMAL_STATE);
+        //specify a special message to speak if the client is disconneced to the gabriel server
+        showAdultPadState.setDisconnectedPrompt("Please pick the pads with the red instructions. Say yes when you are ready");
+
         State showAdultPadErrorState = new State("Pads shown are not correct", "showAdultPadErrorState", "Those are the child pads. Please pick the pads with red instructions.", State.NORMAL_STATE);
 
         State showChildPadState = new State("State to detect child pads", "showChildPadState", "Please pick the pads with the blue instructions.", State.NORMAL_STATE);

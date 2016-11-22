@@ -11,6 +11,7 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -206,6 +207,16 @@ public class ResultReceivingThread extends Thread {
                 Log.i("LOG", "Received message with stateIdentifier " + stateIdentifier + "and messageType " + messageType);
                 StateMessage message = new StateMessage(stateIdentifier, messageType);
                 mainController.handleStateMessage(message);
+                mainController.lastMessageReceivedTimeStamp = Calendar.getInstance().getTimeInMillis();
+                if(mainController.isConnected == false){
+                    mainController.isConnected = true;
+                    mainActivity.runOnUiThread(new Runnable() {
+                        public void run() {
+                            mainActivity.screenLog("Now connected to the Gabriel Server", "#ffffff");
+                        }
+                    });
+                }
+
                 mainActivity.runOnUiThread(new Runnable() {
                     public void run() {
                         mainActivity.screenLog("A: " + mainController.getCurrentState().getPrompt(), "#f89ff9");

@@ -15,6 +15,7 @@ public class State {
     private State nextState;
     private State errorState;
     private String prompt;
+    private String disconnectedPrompt;
 
     public State(int stateType){
         super();
@@ -26,6 +27,7 @@ public class State {
         this.description = description;
         this.identifier = identifier;
         this.prompt = prompt;
+        this.disconnectedPrompt = prompt;
         this.stateType = stateType;
     }
 
@@ -67,6 +69,12 @@ public class State {
 
     public String getPrompt(){
         return prompt;
+    }
+
+    public String getDisconnectedPrompt() {return  disconnectedPrompt;}
+
+    public void setDisconnectedPrompt(String prompt){
+        this.disconnectedPrompt = prompt;
     }
 
 }
