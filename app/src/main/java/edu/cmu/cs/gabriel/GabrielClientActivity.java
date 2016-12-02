@@ -204,8 +204,8 @@ public class GabrielClientActivity extends Activity implements TextToSpeech.OnIn
                 public void run() {
                     long currentTime = Calendar.getInstance().getTimeInMillis();
                     if(mainController.isConnected == true && (currentTime - mainController.lastMessageReceivedTimeStamp > AEDAssistantConst.CHECK_CONNECTION_THRESHOLD)){
-                        mainController.isConnected = false;
-                        screenLog("Disconnected to the Gabriel Server", "#ffffff");
+                      //  mainController.isConnected = false;
+                      //  screenLog("Disconnected to the Gabriel Server", "#ffffff");
                     }
                     checkConnectionHandler.postDelayed(this, AEDAssistantConst.CHECK_CONNECTION_DELAY);
                 }

@@ -10,7 +10,7 @@ import android.widget.TextView;
 import java.util.Calendar;
 
 import edu.cmu.cs.gabriel.GabrielClientActivity;
-import edu.cmu.cs.gabriel.R;
+//import edu.cmu.cs.gabriel.R;
 
 /**
  * @author toby
@@ -20,7 +20,7 @@ import edu.cmu.cs.gabriel.R;
 public class MainController {
     public boolean active = false;
     public long lastMessageReceivedTimeStamp;
-    public boolean isConnected = false;
+    public boolean isConnected = true;
     private Object messageMutex = new Object();
     private State currentState;
     private TextToSpeech tts;
@@ -124,45 +124,46 @@ public class MainController {
         //create the states
         State initialState = new State("Initial state", "initialState", "AED Assistant ready. Say yes to continue.", State.INITIAL_STATE);
 
-        State subjectAgeDetectionState = new State("Detecting if the human is an adult", "subjectAgeDetectionState", "Now detecting if the subject is an adult", State.NORMAL_STATE);
+        State subjectAgeDetectionState = new State("Detecting if the human is an adult", "subjectAgeDetectionState", "Please look at the face of the subject. Detecting the age of the subject", State.NORMAL_STATE);
         //specify a special message to speak if the client is disconneced to the gabriel server
-        subjectAgeDetectionState.setDisconnectedPrompt("Is the subject an adult or a child? Say yes if the subject is an adult");
+        subjectAgeDetectionState.setDisconnectedPrompt("Is the subject an adult? Say yes or no");
 
-        State adultDetectedState  = new State("Human detected as an adult", "adultDetectedState", "The subject seems to be an adult. Is this correct?", State.NORMAL_STATE);
-        State childDetectedState = new State("Human detected as a child", "childDetectedState", "The subject seems to be a child. Is this correct?", State.NORMAL_STATE);
+        //State adultDetectedState  = new State("Human detected as an adult", "adultDetectedState", "The subject seems to be an adult. Is this correct?", State.NORMAL_STATE);
+        //State childDetectedState = new State("Human detected as a child", "childDetectedState", "The subject seems to be a child. Is this correct?", State.NORMAL_STATE);
 
-        State showAdultPadState = new State("State to detect adult pads", "showAdultPadState", "Please pick the pads with the red instructions and put them in front of the camera.", State.NORMAL_STATE);
+        State showAdultPadState = new State("State to detect adult pads", "showAdultPadState", "Subject detected as Adult. Please pick the pads with the red instructions and put them in front of the camera.", State.NORMAL_STATE);
         //specify a special message to speak if the client is disconneced to the gabriel server
-        showAdultPadState.setDisconnectedPrompt("Please pick the pads with the red instructions. Say yes when you are ready");
+        showAdultPadState.setDisconnectedPrompt("Subject detected as Adult. Please pick the pads with the red instructions. Say yes when you are ready");
 
         State showAdultPadErrorState = new State("Pads shown are not correct", "showAdultPadErrorState", "Those are the child pads. Please pick the pads with red instructions.", State.NORMAL_STATE);
 
-        State showChildPadState = new State("State to detect child pads", "showChildPadState", "Please pick the pads with the blue instructions.", State.NORMAL_STATE);
+        State showChildPadState = new State("State to detect child pads", "showChildPadState", "Subject detected as Child. Please pick the pads with the blue instructions.", State.NORMAL_STATE);
         State showChildPadErrorState = new State("Pads shown are not correct", "showChildPadErrorState", "Those are the adult pads. Please pick the pads with blue instructions.", State.NORMAL_STATE);
 
         State peelInstructionsState = new State("State to peel instructions", "peelInstructionsState", "Great. Now peel the instructions from the pads. Say yes when ready.", State.NORMAL_STATE);
+        State peelInstructionsErrorState = new State("Pads not peeled off","peelInstructionsErrorState", "The pads have not been peeled off. Please peel off the instructions from the pad. Say yes when done.",State.NORMAL_STATE);
 
-        State putPadOnLeftChestState = new State("State to put pad on left chest.", "putPadOnLeftChestState", "Good. Now, place the pad that goes to the left chest. Say yes when done.", State.NORMAL_STATE);
-        State putPadOnLeftChestErrorState = new State("Left chest pad wrongly placed.", "putPadOnLeftChestErrorState", "Wrong location for the pad! Place the pad that goes to the left chest. Say yes when ready.", State.NORMAL_STATE);
+        State putPadRightChestState = new State("State to put pad on right chest.", "putPadRightChestState", "Good. Now, place the pad that goes to the right chest of the subject. Say yes when done.", State.NORMAL_STATE);
+        State putPadRightChestErrorState = new State("Right chest pad wrongly placed.", "putPadRightChestErrorState", "Wrong location for the pad! Place the pad on the right chest of the subject. Say yes when ready.", State.NORMAL_STATE);
 
-        State putPadOnRightTorsoState =  new State("State to put pad on right torso.", "putPadOnRightTorsoState", "Ok. Now, place the pad that goes to the right torso. Say yes when done.", State.NORMAL_STATE);
-        State putPadOnRightTorsoErrorState = new State("Right torso pad wrongly placed.", "putPadOnRightTorsoErrorState", "Wrong location for the pad! Please put the other pad on the right torso.", State.NORMAL_STATE);
+        State putPadLeftTorsoState =  new State("State to put pad on left torso.", "putPadLeftTorsoState", "Ok. Now, place the pad that goes to the left torso of the subject. Say yes when done.", State.NORMAL_STATE);
+        State putPadLeftTorsoErrorState = new State("Left torso pad wrongly placed.", "putPadLeftTorsoErrorState", "Wrong location for the pad! Please put the pad on the left torso of the subject. Say yes when ready", State.NORMAL_STATE);
 
         State finalState = new State("Final state", "finalState", "Good. You can now operate the AED machine.", State.ENDING_STATE);
 
 
         // Initial state
-        initialState.setNextState(showAdultPadState);
+        initialState.setNextState(subjectAgeDetectionState);
         initialState.setErrorState(initialState);
 
         // Age detection
-        subjectAgeDetectionState.setNextState(adultDetectedState);
-        subjectAgeDetectionState.setErrorState(childDetectedState);
+        subjectAgeDetectionState.setNextState(showAdultPadState);
+        subjectAgeDetectionState.setErrorState(showChildPadState);
 
         //childDetectedState.setNextState(showChildPadState);
         //childDetectedState.setErrorState(subjectAgeDetectionState);
 
-        //adultDetectedState.setNextState(showPadState);
+        //adultDetectedState.setNextState(showAdultPadState);
         //adultDetectedState.setErrorState(subjectAgeDetectionState);
 
         // Pad showing
@@ -172,8 +173,14 @@ public class MainController {
         showAdultPadErrorState.setNextState(peelInstructionsState);
         showAdultPadErrorState.setErrorState(showAdultPadErrorState);
 
+        showChildPadState.setNextState(peelInstructionsState);
+        showChildPadState.setErrorState(showChildPadErrorState);
+
+        showChildPadErrorState.setNextState(peelInstructionsState);
+        showChildPadErrorState.setErrorState(showChildPadErrorState);
+
         // Instructions peeling
-        peelInstructionsState.setNextState(putPadOnLeftChestState);
+        peelInstructionsState.setNextState(putPadRightChestState);
         peelInstructionsState.setErrorState(peelInstructionsState);
 
         //showChildPadState.setNextState(putPadOnLeftChestState);
@@ -183,17 +190,17 @@ public class MainController {
         //showChildPadErrorState.setErrorState(showChildPadErrorState);
 
         // Putting pads
-        putPadOnLeftChestState.setNextState(putPadOnRightTorsoState);
-        putPadOnLeftChestState.setErrorState(putPadOnLeftChestErrorState);
+        putPadRightChestState.setNextState(putPadLeftTorsoState);
+        putPadRightChestState.setErrorState(putPadRightChestErrorState);
 
-        putPadOnLeftChestErrorState.setNextState(putPadOnRightTorsoState);
-        putPadOnLeftChestErrorState.setErrorState(putPadOnLeftChestErrorState);
+        putPadRightChestErrorState.setNextState(putPadLeftTorsoState);
+        putPadRightChestErrorState.setErrorState(putPadRightChestErrorState);
 
-        putPadOnRightTorsoState.setNextState(finalState);
-        putPadOnRightTorsoState.setErrorState(putPadOnRightTorsoErrorState);
+        putPadLeftTorsoState.setNextState(finalState);
+        putPadLeftTorsoState.setErrorState(putPadLeftTorsoErrorState);
 
-        putPadOnRightTorsoErrorState.setNextState(finalState);
-        putPadOnRightTorsoErrorState.setErrorState(putPadOnRightTorsoErrorState);
+        putPadLeftTorsoErrorState.setNextState(finalState);
+        putPadLeftTorsoErrorState.setErrorState(putPadLeftTorsoErrorState);
 
         //use the first state as the current state
         currentState = initialState;
