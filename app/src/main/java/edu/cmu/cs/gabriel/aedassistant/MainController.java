@@ -27,6 +27,7 @@ public class MainController {
     private Time lastTtsTime = new Time();
     private Context context;
     private TextView textView;
+    public static String spokenSentence;
     //TODO: the prompt of the current state should be read out every Ns
 
     public MainController(Context context, TextView textView){
@@ -113,8 +114,11 @@ public class MainController {
             }
         }
         tts.stop();
-        if(isConnected)
-            tts.speak(currentState.getPrompt(), TextToSpeech.QUEUE_FLUSH, null);
+        if(isConnected) {
+            spokenSentence = currentState.getPrompt();
+            tts.speak(spokenSentence, TextToSpeech.QUEUE_FLUSH, null);
+
+        }
         else
             tts.speak(currentState.getDisconnectedPrompt(), TextToSpeech.QUEUE_FLUSH, null);
         lastTtsTime.setToNow();
@@ -125,6 +129,7 @@ public class MainController {
         State initialState = new State("Initial state", "initialState", "AED Assistant ready. Say yes to continue.", State.INITIAL_STATE);
 
         State subjectAgeDetectionState = new State("Detecting if the human is an adult", "subjectAgeDetectionState", "Please look at the face of the subject. Detecting the age of the subject", State.NORMAL_STATE);
+        subjectAgeDetectionState.setFurtherPrompt("Not able to detect the age. Please make sure you are looking at the face of the subject");
         //specify a special message to speak if the client is disconneced to the gabriel server
         subjectAgeDetectionState.setDisconnectedPrompt("Is the subject an adult? Say yes or no");
 
@@ -133,6 +138,7 @@ public class MainController {
 
         State showAdultPadState = new State("State to detect adult pads", "showAdultPadState", "Subject detected as Adult. Please pick the pads with the red instructions and put them in front of the camera.", State.NORMAL_STATE);
         //specify a special message to speak if the client is disconneced to the gabriel server
+        showAdultPadState.setFurtherPrompt("Not able to detect the pads. Please put them in front of me");
         showAdultPadState.setDisconnectedPrompt("Subject detected as Adult. Please pick the pads with the red instructions. Say yes when you are ready");
 
         State showAdultPadErrorState = new State("Pads shown are not correct", "showAdultPadErrorState", "Those are the child pads. Please pick the pads with red instructions.", State.NORMAL_STATE);
@@ -141,13 +147,19 @@ public class MainController {
         State showChildPadErrorState = new State("Pads shown are not correct", "showChildPadErrorState", "Those are the adult pads. Please pick the pads with blue instructions.", State.NORMAL_STATE);
 
         State peelInstructionsState = new State("State to peel instructions", "peelInstructionsState", "Great. Now peel the instructions from the pads. Say yes when ready.", State.NORMAL_STATE);
+        peelInstructionsState.setFurtherPrompt("I dont like those instructions on the pads. Please peel them off and then show me the pads.");
         State peelInstructionsErrorState = new State("Pads not peeled off","peelInstructionsErrorState", "The pads have not been peeled off. Please peel off the instructions from the pad. Say yes when done.",State.NORMAL_STATE);
 
         State putPadRightChestState = new State("State to put pad on right chest.", "putPadRightChestState", "Good. Now, place the pad that goes to the right chest of the subject. Say yes when done.", State.NORMAL_STATE);
+        putPadRightChestState.setFurtherPrompt("Unable to detect the pads position. Make sure the subject's face and torso are in my view.");
         State putPadRightChestErrorState = new State("Right chest pad wrongly placed.", "putPadRightChestErrorState", "Wrong location for the pad! Place the pad on the right chest of the subject. Say yes when ready.", State.NORMAL_STATE);
+        putPadRightChestErrorState.setFurtherPrompt("Unable to detect the pads position. Make sure the subject's face and torso are in my view.");
 
         State putPadLeftTorsoState =  new State("State to put pad on left torso.", "putPadLeftTorsoState", "Ok. Now, place the pad that goes to the left torso of the subject. Say yes when done.", State.NORMAL_STATE);
+        putPadLeftTorsoState.setFurtherPrompt("Unable to detect the pads position. Make sure the subject's face and torso are in my view.");
+
         State putPadLeftTorsoErrorState = new State("Left torso pad wrongly placed.", "putPadLeftTorsoErrorState", "Wrong location for the pad! Please put the pad on the left torso of the subject. Say yes when ready", State.NORMAL_STATE);
+        putPadLeftTorsoErrorState.setFurtherPrompt("Unable to detect the pads position. Make sure the subject's face and torso are in my view.");
 
         State finalState = new State("Final state", "finalState", "Good. You can now operate the AED machine.", State.ENDING_STATE);
 

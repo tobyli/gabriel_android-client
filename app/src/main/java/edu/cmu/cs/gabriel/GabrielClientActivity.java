@@ -196,7 +196,7 @@ public class GabrielClientActivity extends Activity implements TextToSpeech.OnIn
                 }, AEDAssistantConst.VOICE_PROMPT_DELAY);
             }
             //print the initial message
-            screenLog("A: " + mainController.getCurrentState().getPrompt(), "#f89ff9");
+            screenLog("A: " + mainController.spokenSentence, "#f89ff9");
 
             checkConnectionHandler = new Handler();
             checkConnectionHandler.postDelayed(new Runnable() {
@@ -236,7 +236,7 @@ public class GabrielClientActivity extends Activity implements TextToSpeech.OnIn
             StateMessage stateMessage = new StateMessage(mainController.getCurrentState().getIdentifier(), StateMessage.NEXT_STATE);
             screenLog("U: " + "Yes", "#42f4f4");
             mainController.handleStateMessage(stateMessage);
-            screenLog("A: " + mainController.getCurrentState().getPrompt(), "#f89ff9");
+            screenLog("A: " + mainController.spokenSentence, "#f89ff9");
             //screenLog("SENT A \"NEXT\" MESSAGE");
             //show the ending state
             if(mainController.getCurrentState().stateType == State.ENDING_STATE)
@@ -253,7 +253,7 @@ public class GabrielClientActivity extends Activity implements TextToSpeech.OnIn
             StateMessage stateMessage = new StateMessage(mainController.getCurrentState().getIdentifier(), StateMessage.ERROR_STATE);
             screenLog("U: " + "No", "#42f4f4");
             mainController.handleStateMessage(stateMessage);
-            screenLog("A: " + mainController.getCurrentState().getPrompt(), "#f89ff9");
+            screenLog("A: " + mainController.spokenSentence, "#f89ff9");
         }
         else if(mainController != null && mainController.getCurrentState() != null && mainController.getCurrentState().stateType == State.ENDING_STATE) {
             screenLog("REACH THE ENDING STATE", "#ffffff");

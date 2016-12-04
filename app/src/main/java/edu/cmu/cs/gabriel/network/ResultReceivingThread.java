@@ -219,7 +219,7 @@ public class ResultReceivingThread extends Thread {
 
                 mainActivity.runOnUiThread(new Runnable() {
                     public void run() {
-                        mainActivity.screenLog("A: " + mainController.getCurrentState().getPrompt(), "#f89ff9");
+                        mainActivity.screenLog("A: " + mainController.spokenSentence, "#f89ff9");
                     }
                 });
             }
