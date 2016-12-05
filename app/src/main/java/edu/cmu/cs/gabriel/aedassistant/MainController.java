@@ -142,27 +142,37 @@ public class MainController {
         showAdultPadState.setDisconnectedPrompt("Subject detected as Adult. Please pick the pads with the red instructions. Say yes when you are ready");
 
         State showAdultPadErrorState = new State("Pads shown are not correct", "showAdultPadErrorState", "Those are the child pads. Please pick the pads with red instructions.", State.NORMAL_STATE);
+        showAdultPadErrorState.setDisconnectedPrompt("Please pick the pads with the red instructions. Say yes when you are ready");
 
-        State showChildPadState = new State("State to detect child pads", "showChildPadState", "Subject detected as Child. Please pick the pads with the blue instructions.", State.NORMAL_STATE);
+        State showChildPadState = new State("State to detect child pads", "showChildPadState", "Subject detected as Child. Please pick the pads with the blue instructions and put them in front of me", State.NORMAL_STATE);
+        showChildPadState.setDisconnectedPrompt("Please pick the pads with the blue instructions. Say yes when ready.");
+
         State showChildPadErrorState = new State("Pads shown are not correct", "showChildPadErrorState", "Those are the adult pads. Please pick the pads with blue instructions.", State.NORMAL_STATE);
+        showChildPadErrorState.setDisconnectedPrompt("Please pick the blue pads. Say yes when done");
 
-        State peelInstructionsState = new State("State to peel instructions", "peelInstructionsState", "Great. Now peel the instructions from the pads. Say yes when ready.", State.NORMAL_STATE);
-        peelInstructionsState.setFurtherPrompt("I dont like those instructions on the pads. Please peel them off and then show me the pads.");
-        State peelInstructionsErrorState = new State("Pads not peeled off","peelInstructionsErrorState", "The pads have not been peeled off. Please peel off the instructions from the pad. Say yes when done.",State.NORMAL_STATE);
+        State peelInstructionsState = new State("State to peel instructions", "peelInstructionsState", "Great. Now peel the instructions from the pads and show the pads to me. ", State.NORMAL_STATE);
+        peelInstructionsState.setFurtherPrompt("The instructions are still there on the pads. Please peel them off and then show me the pads.");
+        peelInstructionsState.setDisconnectedPrompt("Please peel the instructions from the pad. Say yes when done.");
+        //State peelInstructionsErrorState = new State("Pads not peeled off","peelInstructionsErrorState", "The pads have not been peeled off. Please peel off the instructions from the pad. Say yes when done.",State.NORMAL_STATE);
 
-        State putPadRightChestState = new State("State to put pad on right chest.", "putPadRightChestState", "Good. Now, place the pad that goes to the right chest of the subject. Say yes when done.", State.NORMAL_STATE);
+        State putPadRightChestState = new State("State to put pad on right chest.", "putPadRightChestState", "Good. Now, place the pad that goes to the right chest of the subject. Then please make sure the face and torso of the subject are in my view.", State.NORMAL_STATE);
         putPadRightChestState.setFurtherPrompt("Unable to detect the pads position. Make sure the subject's face and torso are in my view.");
-        State putPadRightChestErrorState = new State("Right chest pad wrongly placed.", "putPadRightChestErrorState", "Wrong location for the pad! Place the pad on the right chest of the subject. Say yes when ready.", State.NORMAL_STATE);
-        putPadRightChestErrorState.setFurtherPrompt("Unable to detect the pads position. Make sure the subject's face and torso are in my view.");
+        putPadRightChestState.setDisconnectedPrompt("Great. Now, place the pad that goes to the right chest of the subject. Say yes when done.");
 
-        State putPadLeftTorsoState =  new State("State to put pad on left torso.", "putPadLeftTorsoState", "Ok. Now, place the pad that goes to the left torso of the subject. Say yes when done.", State.NORMAL_STATE);
+        State putPadRightChestErrorState = new State("Right chest pad wrongly placed.", "putPadRightChestErrorState", "Wrong location for the pad! Place the pad on the right chest of the subject. Right chest of the subject will appear on your left.", State.NORMAL_STATE);
+        putPadRightChestErrorState.setFurtherPrompt("Pad is still in the wrong location. Make sure you have not interchanged the two pads. Place the pad on the right chest and make sure the face and torso of the subject are in my view.");
+        putPadRightChestErrorState.setDisconnectedPrompt("Please put the pad on the right chest of the subject. Say yes when it is done.");
+
+        State putPadLeftTorsoState =  new State("State to put pad on left torso.", "putPadLeftTorsoState", "Ok. Now, place the pad that goes to the left torso of the subject and look at the face and torso of the subject", State.NORMAL_STATE);
         putPadLeftTorsoState.setFurtherPrompt("Unable to detect the pads position. Make sure the subject's face and torso are in my view.");
+        putPadLeftTorsoState.setDisconnectedPrompt("Ok. Now please put the pad that goes to the left torso of the subject. Say yes when done.");
 
-        State putPadLeftTorsoErrorState = new State("Left torso pad wrongly placed.", "putPadLeftTorsoErrorState", "Wrong location for the pad! Please put the pad on the left torso of the subject. Say yes when ready", State.NORMAL_STATE);
-        putPadLeftTorsoErrorState.setFurtherPrompt("Unable to detect the pads position. Make sure the subject's face and torso are in my view.");
+        State putPadLeftTorsoErrorState = new State("Left torso pad wrongly placed.", "putPadLeftTorsoErrorState", "Wrong location for the pad! Please put the pad on the left torso of the subject. Left torso of the subject is below the chest and will appear on your right.", State.NORMAL_STATE);
+        putPadLeftTorsoErrorState.setFurtherPrompt("Pad is still in the wrong location. Make sure you have not interchanged the two pads. Place the pad on the left torso and make sure the face and torso of the subject are in my view.");
+        putPadLeftTorsoErrorState.setDisconnectedPrompt("Please put the pad on the left torso of the subject. Say yes when done.");
 
-        State finalState = new State("Final state", "finalState", "Good. You can now operate the AED machine.", State.ENDING_STATE);
-
+        State finalState = new State("Final state", "finalState", "Awesome. You can now operate the AED machine.", State.ENDING_STATE);
+        finalState.setDisconnectedPrompt("Awesome. You can now operate the AED device.");
 
         // Initial state
         initialState.setNextState(subjectAgeDetectionState);
